@@ -17,7 +17,7 @@ class ExpenseResource extends JsonResource
         return [
             'id' => $this->id,
             'description' => $this->description,
-            'value' => $this->value,
+            'value' => number_format($this->value, 2, ',', '.'),
             'date' => $this->date,
             'user' => $this->whenLoaded('user'),
         ];

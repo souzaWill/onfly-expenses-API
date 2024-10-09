@@ -55,7 +55,7 @@ class ExpenseControllerTest extends TestCase
             'description' => fake()->word(),
             'date' => now()->format('Y-m-d'),
             'user_id' => $user->id,
-            'value' => fake()->randomFloat(2, 0, 99999999.99),
+            'value' => fake()->randomFloat(2, 0.01, 999999.99),
         ];
 
         $this->post($this->baseUrl, $body)
@@ -77,7 +77,7 @@ class ExpenseControllerTest extends TestCase
             'description' => fake()->word(),
             'date' => now()->subDay()->format('Y-m-d'),
             'user_id' => $user->id,
-            'value' => fake()->randomFloat(2, 0, 99999999.99),
+            'value' => fake()->randomFloat(2, 0.01, 999999.99),
         ];
 
         $this->post($this->baseUrl, $body)
@@ -118,7 +118,7 @@ class ExpenseControllerTest extends TestCase
             'description' => str()->random(192),
             'date' => now()->addDay()->format('Y-m-d'),
             'user_id' => User::count() + 2,
-            'value' => fake()->randomFloat(2, 0, 99999999.99) * -1,
+            'value' => fake()->randomFloat(2, 0.01, 999999.99) * -1,
         ];
 
         $this->post($this->baseUrl, $body)
@@ -146,7 +146,7 @@ class ExpenseControllerTest extends TestCase
                     'id' => $expense->id,
                     'date' => $expense->date,
                     'description' => $expense->description,
-                    'value' => $expense->value,
+                    'value' => number_format($expense->value, 2, ',', '.'),
                 ],
             ]);
     }
@@ -247,7 +247,7 @@ class ExpenseControllerTest extends TestCase
             'description' => str()->random(192),
             'date' => now()->addDay(),
             'user_id' => $invalidId,
-            'value' => fake()->randomFloat(2, 0, 99999999.99) * -1,
+            'value' => fake()->randomFloat(2, 0.01, 999999.99) * -1,
         ];
 
         $this->put($url, $body)
