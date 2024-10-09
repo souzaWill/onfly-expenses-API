@@ -1,84 +1,68 @@
 <?php
 
-namespace Tests\Feature;
-
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
 
-class AuthControllerTest extends TestCase
-{
-    use WithFaker;
+test('user can successful register', function () {
+    $name = fake()->name();
+    $email = fake()->email();
+    $password = fake()->password();
 
-    public function test_user_can_successful_register(): void
-    {
-        $name = fake()->name();
-        $email = fake()->email();
-        $password = fake()->password();
+    $response = $this->post('api/register', [
+        'name' => $name,
+        'email' => $email,
+        'password' => $password,
+        'c_password' => $password,
+    ]);
 
-        $response = $this->post('api/register', [
-            'name' => $name,
-            'email' => $email,
-            'password' => $password,
-            'c_password' => $password,
-        ]);
+    $response->assertCreated();
+});
 
-        $response->assertCreated();
-    }
+test('user cannot register with invalid inputs', function () {
+    $this->post('api/register', [
+        'name' => null, //required
+        'email' => fake()->word(), //invalid format
+        'password' => null, //required
+        'c_password' => fake()->password(), //not equals password
+    ])->assertSessionHasErrors([
+        'name',
+        'email',
+        'password',
+        'c_password',
+    ]);
+});
 
-    public function test_user_cannot_register_with_invalid_inputs(): void
-    {
-        $this->post('api/register', [
-            'name' => null, //required
-            'email' => fake()->word(), //invalid format
-            'password' => null, //required
-            'c_password' => fake()->password(), //not equals password
-        ])->assertSessionHasErrors([
-            'name',
-            'email',
-            'password',
-            'c_password',
-        ]);
+test('user can successful login', function () {
+    $password = fake()->password();
+    $user = User::factory()->create([
+        'password' => $password,
+    ]);
 
-    }
+    $response = $this->post('api/login', [
+        'email' => $user->email,
+        'password' => $password,
+    ]);
 
-    public function test_user_can_successful_login(): void
-    {
-        $password = fake()->password();
-        $user = User::factory()->create([
-            'password' => $password,
-        ]);
+    $response->assertOk();
+    $this->isAuthenticated();
+});
 
-        $response = $this->post('api/login', [
-            'email' => $user->email,
-            'password' => $password,
-        ]);
+test('user cannot login with wrong credetials', function () {
+    $password = fake()->password();
+    $user = User::factory()->create([
+        'password' => $password,
+    ]);
 
-        $response->assertOk();
-        $this->isAuthenticated();
-    }
+    $response = $this->post('api/login', [
+        'email' => $user->email,
+        'password' => fake()->password(),
 
-    public function test_user_cannot_login_with_wrong_credetials(): void
-    {
-        $password = fake()->password();
-        $user = User::factory()->create([
-            'password' => $password,
-        ]);
+    ]);
 
-        $response = $this->post('api/login', [
-            'email' => $user->email,
-            'password' => fake()->password(),
+    $response->assertUnauthorized();
+});
 
-        ]);
+test('user can successful logout', function () {
+    $this->login();
 
-        $response->assertUnauthorized();
-    }
-
-    public function test_user_can_successful_logout(): void
-    {
-        $this->login();
-
-        $this->post('api/logout')->assertOk();
-    }
-}
+    $this->post('api/logout')->assertOk();
+});

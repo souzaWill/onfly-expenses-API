@@ -1,371 +1,349 @@
 <?php
 
-namespace Tests\Feature;
-
 use App\Models\Expense;
 use App\Models\User;
 use App\Notifications\ExpenseCreated;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\Fluent\AssertableJson;
-use Tests\TestCase;
 
-class ExpenseControllerTest extends TestCase
-{
-    private string $baseUrl = 'api/expenses';
+beforeEach(function () {
+    $this->baseUrl = 'api/expenses';
+});
 
-    public function test_can_list_expenses_logged_user(): void
-    {
-        $user = $this->login();
+test('can list expenses logged user', function () {
+    $user = $this->login();
 
-        Expense::factory()->create([
-            'user_id' => $user->id,
-        ]);
+    Expense::factory()->create([
+        'user_id' => $user->id,
+    ]);
 
-        $this->get($this->baseUrl)
-            ->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJson(fn (AssertableJson $json) => $json
-                ->has('data.0', fn (AssertableJson $json) => $json
-                    ->hasAll([
-                        'id',
-                        'description',
-                        'date',
-                        'value',
-                        'user',
-                    ])
-                )
-            );
-
-    }
-
-    public function test_cannot_list_expenses_from_other_user(): void
-    {
-        $this->login();
-
-        Expense::factory()->create();
-
-        $this->get($this->baseUrl)
-            ->assertOk()
-            ->assertJsonCount(0, 'data');
-    }
-
-    public function test_can_create_expense(): void
-    {
-        Notification::fake();
-
-        $user = $this->login();
-
-        $body = [
-            'description' => fake()->word(),
-            'date' => now()->format('Y-m-d'),
-            'user_id' => $user->id,
-            'value' => fake()->randomFloat(2, 0.01, 999999.99),
-        ];
-
-        $this->post($this->baseUrl, $body)
-            ->assertCreated();
-
-        $this->assertDatabaseHas('expenses', [
-            'user_id' => $user->id,
-            'date' => $body['date'],
-            'description' => $body['description'],
-            'value' => $body['value'],
-        ]);
-
-        Notification::assertSentTo(
-            [$user], ExpenseCreated::class
+    $this->get($this->baseUrl)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJson(fn (AssertableJson $json) => $json
+            ->has('data.0', fn (AssertableJson $json) => $json
+                ->hasAll([
+                    'id',
+                    'description',
+                    'date',
+                    'value',
+                    'user',
+                ])
+            )
         );
-    }
+});
 
-    public function test_can_create_expense_with_date_in_past(): void
-    {
-        Notification::fake();
+test('cannot list expenses from other user', function () {
+    $this->login();
 
-        $user = $this->login();
+    Expense::factory()->create();
 
-        $body = [
-            'description' => fake()->word(),
-            'date' => now()->subDay()->format('Y-m-d'),
-            'user_id' => $user->id,
-            'value' => fake()->randomFloat(2, 0.01, 999999.99),
-        ];
+    $this->get($this->baseUrl)
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+});
 
-        $this->post($this->baseUrl, $body)
-            ->assertCreated();
+test('can create expense', function () {
+    Notification::fake();
 
-        $this->assertDatabaseHas('expenses', [
-            'user_id' => $user->id,
-            'date' => $body['date'],
-            'description' => $body['description'],
-            'value' => $body['value'],
+    $user = $this->login();
+
+    $body = [
+        'description' => fake()->word(),
+        'date' => now()->format('Y-m-d'),
+        'user_id' => $user->id,
+        'value' => fake()->randomFloat(2, 0.01, 999999.99),
+    ];
+
+    $this->post($this->baseUrl, $body)
+        ->assertCreated();
+
+    $this->assertDatabaseHas('expenses', [
+        'user_id' => $user->id,
+        'date' => $body['date'],
+        'description' => $body['description'],
+        'value' => $body['value'],
+    ]);
+
+    Notification::assertSentTo(
+        [$user],
+        ExpenseCreated::class
+    );
+});
+
+test('can create expense with date in past', function () {
+    Notification::fake();
+
+    $user = $this->login();
+
+    $body = [
+        'description' => fake()->word(),
+        'date' => now()->subDay()->format('Y-m-d'),
+        'user_id' => $user->id,
+        'value' => fake()->randomFloat(2, 0.01, 999999.99),
+    ];
+
+    $this->post($this->baseUrl, $body)
+        ->assertCreated();
+
+    $this->assertDatabaseHas('expenses', [
+        'user_id' => $user->id,
+        'date' => $body['date'],
+        'description' => $body['description'],
+        'value' => $body['value'],
+    ]);
+
+    Notification::assertSentTo(
+        [$user],
+        ExpenseCreated::class
+    );
+});
+
+test('cannot create expense with value zero', function () {
+    Notification::fake();
+
+    $user = $this->login();
+
+    $body = [
+        'description' => fake()->word(),
+        'date' => now()->format('Y-m-d'),
+        'user_id' => $user->id,
+        'value' => 0,
+    ];
+
+    $this->post($this->baseUrl, $body)
+        ->assertSessionHasErrors(['value']);
+
+    $this->assertDatabaseMissing('expenses', [
+        'user_id' => $user->id,
+    ]);
+
+    Notification::assertNotSentTo(
+        [$user],
+        ExpenseCreated::class
+    );
+});
+
+test('cannot create expense with invalid inputs', function () {
+    Notification::fake();
+
+    $user = $this->login();
+
+    $body = [
+        'description' => str()->random(192),
+        'date' => now()->addDay()->format('Y-m-d'),
+        'user_id' => User::count() + 2,
+        'value' => fake()->randomFloat(2, 0.01, 999999.99) * -1,
+    ];
+
+    $this->post($this->baseUrl, $body)
+        ->assertSessionHasErrors(['user_id', 'description', 'date', 'value']);
+
+    $this->assertDatabaseMissing('expenses', [
+        'user_id' => $user->id,
+    ]);
+
+    Notification::assertNotSentTo(
+        [$user],
+        ExpenseCreated::class
+    );
+});
+
+test('can show expense', function () {
+    $user = $this->login();
+
+    $expense = Expense::factory()->create([
+        'user_id' => $user->id,
+    ]);
+
+    $url = $this->baseUrl.'/'.$expense->id;
+
+    $this->get($url)
+        ->assertOk()
+        ->assertJson([
+            'data' => [
+                'id' => $expense->id,
+                'date' => $expense->date,
+                'description' => $expense->description,
+                'value' => number_format($expense->value, 2, ',', '.'),
+            ],
         ]);
+});
 
-        Notification::assertSentTo(
-            [$user], ExpenseCreated::class
-        );
-    }
+test('cannot show expense from other user', function () {
+    $this->login();
 
-    public function test_cannot_create_expense_with_value_zero(): void
-    {
-        Notification::fake();
+    $expense = Expense::factory()->create();
+
+    $url = $this->baseUrl.'/'.$expense->id;
 
-        $user = $this->login();
+    $this->get($url)
+        ->assertForbidden();
+});
 
-        $body = [
-            'description' => fake()->word(),
-            'date' => now()->format('Y-m-d'),
-            'user_id' => $user->id,
-            'value' => 0,
-        ];
+test('can update expense', function () {
+    $user = $this->login();
 
-        $this->post($this->baseUrl, $body)
-            ->assertSessionHasErrors(['value']);
+    $expense = Expense::factory()->create([
+        'user_id' => $user->id,
+    ]);
 
-        $this->assertDatabaseMissing('expenses', [
-            'user_id' => $user->id,
-        ]);
+    $url = $this->baseUrl.'/'.$expense->id;
 
-        Notification::assertNotSentTo(
-            [$user], ExpenseCreated::class
-        );
-    }
+    $response = $this->put($url, [
+        'description' => 'updated description',
+    ]);
 
-    public function test_cannot_create_expense_with_invalid_inputs(): void
-    {
-        Notification::fake();
+    $response->assertOk();
 
-        $user = $this->login();
+    $this->assertDatabaseHas('expenses', [
+        'user_id' => $user->id,
+        'date' => $expense->date,
+        'description' => 'updated description',
+        'value' => $expense->value,
+    ]);
+});
 
-        $body = [
-            'description' => str()->random(192),
-            'date' => now()->addDay()->format('Y-m-d'),
-            'user_id' => User::count() + 2,
-            'value' => fake()->randomFloat(2, 0.01, 999999.99) * -1,
-        ];
+test('can update expense with date in past', function () {
+    $user = $this->login();
 
-        $this->post($this->baseUrl, $body)
-            ->assertSessionHasErrors(['user_id', 'description', 'date', 'value']);
+    $expense = Expense::factory()->create([
+        'user_id' => $user->id,
+    ]);
 
-        $this->assertDatabaseMissing('expenses', [
-            'user_id' => $user->id,
-        ]);
+    $url = $this->baseUrl.'/'.$expense->id;
+    $dateInPast = now()->subDay()->format('Y-m-d');
+    $response = $this->put($url, [
+        'date' => $dateInPast,
+    ]);
 
-        Notification::assertNotSentTo(
-            [$user], ExpenseCreated::class
-        );
-    }
+    $response->assertOk();
 
-    public function test_can_show_expense(): void
-    {
-        $user = $this->login();
+    $this->assertDatabaseHas('expenses', [
+        'user_id' => $user->id,
+        'date' => $dateInPast,
+        'description' => $expense->description,
+        'value' => $expense->value,
+    ]);
+});
 
-        $expense = Expense::factory()->create([
-            'user_id' => $user->id,
-        ]);
+test('cannot update expense with value zero', function () {
+    $user = $this->login();
 
-        $url = $this->baseUrl.'/'.$expense->id;
+    $expense = Expense::factory()->create([
+        'user_id' => $user->id,
+    ]);
 
-        $this->get($url)
-            ->assertOk()
-            ->assertJson([
-                'data' => [
-                    'id' => $expense->id,
-                    'date' => $expense->date,
-                    'description' => $expense->description,
-                    'value' => number_format($expense->value, 2, ',', '.'),
-                ],
-            ]);
-    }
-
-    public function test_cannot_show_expense_from_other_user(): void
-    {
-        $this->login();
-
-        $expense = Expense::factory()->create();
-
-        $url = $this->baseUrl.'/'.$expense->id;
-
-        $this->get($url)
-            ->assertForbidden();
-
-    }
-
-    public function test_can_update_expense(): void
-    {
-        $user = $this->login();
-
-        $expense = Expense::factory()->create([
-            'user_id' => $user->id,
-        ]);
-
-        $url = $this->baseUrl.'/'.$expense->id;
+    $url = $this->baseUrl.'/'.$expense->id;
 
-        $response = $this->put($url, [
-            'description' => 'updated description',
-        ]);
+    $this->put($url, [
+        'value' => 0,
+    ])->assertSessionHasErrors(['value']);
 
-        $response->assertOk();
+    $this->assertDatabaseHas('expenses', [
+        'id' => $expense->id,
+    ]);
+});
 
-        $this->assertDatabaseHas('expenses', [
-            'user_id' => $user->id,
-            'date' => $expense->date,
-            'description' => 'updated description',
-            'value' => $expense->value,
-        ]);
-
-    }
-
-    public function test_can_update_expense_with_date_in_past(): void
-    {
-        $user = $this->login();
-
-        $expense = Expense::factory()->create([
-            'user_id' => $user->id,
-        ]);
-
-        $url = $this->baseUrl.'/'.$expense->id;
-        $dateInPast = now()->subDay()->format('Y-m-d');
-        $response = $this->put($url, [
-            'date' => $dateInPast,
-        ]);
+test('cannot update expense with invalid inputs', function () {
+    $user = $this->login();
 
-        $response->assertOk();
+    $expense = Expense::factory()->create([
+        'user_id' => $user->id,
+    ]);
+    $url = $this->baseUrl.'/'.$expense->id;
 
-        $this->assertDatabaseHas('expenses', [
-            'user_id' => $user->id,
-            'date' => $dateInPast,
-            'description' => $expense->description,
-            'value' => $expense->value,
-        ]);
+    $invalidId = User::count() + 2;
+    $body = [
+        'description' => str()->random(192),
+        'date' => now()->addDay(),
+        'user_id' => $invalidId,
+        'value' => fake()->randomFloat(2, 0.01, 999999.99) * -1,
+    ];
 
-    }
+    $this->put($url, $body)
+        ->assertSessionHasErrors(['user_id', 'description', 'date', 'value']);
 
-    public function test_cannot_update_expense_with_value_zero(): void
-    {
-        $user = $this->login();
+    $this->assertDatabaseHas('expenses', [
+        'id' => $expense->id,
+    ]);
 
-        $expense = Expense::factory()->create([
-            'user_id' => $user->id,
-        ]);
+    $this->assertDatabaseMissing('expenses', [
+        'user_id' => $invalidId,
+        'date' => $body['date'],
+        'description' => $body['description'],
+        'value' => $body['value'],
+    ]);
+});
 
-        $url = $this->baseUrl.'/'.$expense->id;
+test('cannot update expense from other user', function () {
+    $this->login();
 
-        $this->put($url, [
-            'value' => 0,
-        ])->assertSessionHasErrors(['value']);
+    $expense = Expense::factory()->create();
 
-        $this->assertDatabaseHas('expenses', [
-            'id' => $expense->id,
-        ]);
-    }
+    $url = $this->baseUrl.'/'.$expense->id;
 
-    public function test_cannot_update_expense_with_invalid_inputs(): void
-    {
-        $user = $this->login();
+    $response = $this->put($url, [
+        'description' => 'updated description',
+    ]);
 
-        $expense = Expense::factory()->create([
-            'user_id' => $user->id,
-        ]);
-        $url = $this->baseUrl.'/'.$expense->id;
+    $response->assertForbidden();
 
-        $invalidId = User::count() + 2;
-        $body = [
-            'description' => str()->random(192),
-            'date' => now()->addDay(),
-            'user_id' => $invalidId,
-            'value' => fake()->randomFloat(2, 0.01, 999999.99) * -1,
-        ];
+    $this->assertDatabaseHas('expenses', [
+        'id' => $expense->id,
+        'user_id' => $expense->user_id,
+        'date' => $expense->date,
+        'description' => $expense->description,
+        'value' => $expense->value,
+    ]);
+});
 
-        $this->put($url, $body)
-            ->assertSessionHasErrors(['user_id', 'description', 'date', 'value']);
+test('can delete expense', function () {
+    $user = $this->login();
 
-        $this->assertDatabaseHas('expenses', [
-            'id' => $expense->id,
-        ]);
+    $expense = Expense::factory()->create([
+        'user_id' => $user->id,
+    ]);
 
-        $this->assertDatabaseMissing('expenses', [
-            'user_id' => $invalidId,
-            'date' => $body['date'],
-            'description' => $body['description'],
-            'value' => $body['value'],
-        ]);
-    }
+    $url = $this->baseUrl.'/'.$expense->id;
 
-    public function test_cannot_update_expense_from_other_user(): void
-    {
-        $this->login();
+    $response = $this->delete($url);
 
-        $expense = Expense::factory()->create();
+    $response->assertNoContent();
 
-        $url = $this->baseUrl.'/'.$expense->id;
+    $this->assertDatabaseMissing('expenses', [
+        'id' => $expense->id,
+    ]);
+});
 
-        $response = $this->put($url, [
-            'description' => 'updated description',
-        ]);
+test('cannot delete expense from other user', function () {
+    $this->login();
 
-        $response->assertForbidden();
+    $expense = Expense::factory()->create();
 
-        $this->assertDatabaseHas('expenses', [
-            'id' => $expense->id,
-            'user_id' => $expense->user_id,
-            'date' => $expense->date,
-            'description' => $expense->description,
-            'value' => $expense->value,
-        ]);
+    $url = $this->baseUrl.'/'.$expense->id;
 
-    }
+    $response = $this->delete($url);
 
-    public function test_can_delete_expense(): void
-    {
-        $user = $this->login();
+    $response->assertForbidden();
 
-        $expense = Expense::factory()->create([
-            'user_id' => $user->id,
-        ]);
+    $this->assertDatabaseHas('expenses', [
+        'id' => $expense->id,
+        'user_id' => $expense->user_id,
+        'date' => $expense->date,
+        'description' => $expense->description,
+        'value' => $expense->value,
+    ]);
+});
 
-        $url = $this->baseUrl.'/'.$expense->id;
+test('cannot delete inexistent expense', function () {
+    $this->login();
 
-        $response = $this->delete($url);
+    $invalidId = Expense::count() + 2;
 
-        $response->assertNoContent();
+    $url = $this->baseUrl.'/'.$invalidId;
 
-        $this->assertDatabaseMissing('expenses', [
-            'id' => $expense->id,
-        ]);
-    }
+    $response = $this->delete($url);
 
-    public function test_cannot_delete_expense_from_other_user(): void
-    {
-        $this->login();
-
-        $expense = Expense::factory()->create();
-
-        $url = $this->baseUrl.'/'.$expense->id;
-
-        $response = $this->delete($url);
-
-        $response->assertForbidden();
-
-        $this->assertDatabaseHas('expenses', [
-            'id' => $expense->id,
-            'user_id' => $expense->user_id,
-            'date' => $expense->date,
-            'description' => $expense->description,
-            'value' => $expense->value,
-        ]);
-    }
-
-    public function test_cannot_delete_inexistent_expense(): void
-    {
-        $this->login();
-
-        $invalidId = Expense::count() + 2;
-
-        $url = $this->baseUrl.'/'.$invalidId;
-
-        $response = $this->delete($url);
-
-        $response->assertNotFound();
-
-    }
-}
+    $response->assertNotFound();
+});
