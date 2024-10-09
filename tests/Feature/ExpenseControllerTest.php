@@ -91,7 +91,6 @@ class ExpenseControllerTest extends TestCase
         ]);
     }
 
-
     public function test_cannot_create_expense_with_invalid_inputs(): void
     {
         $user = $this->login();
@@ -223,7 +222,7 @@ class ExpenseControllerTest extends TestCase
         $this->assertDatabaseMissing('expenses', [
             'user_id' => $invalidId,
             'date' => $body['date'],
-            'description'=> $body['description'],
+            'description' => $body['description'],
             'value' => $body['value'],
         ]);
     }

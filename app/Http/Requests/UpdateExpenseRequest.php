@@ -11,7 +11,7 @@ class UpdateExpenseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->expense);    
+        return $this->user()->can('update', $this->expense);
     }
 
     /**
@@ -24,7 +24,7 @@ class UpdateExpenseRequest extends FormRequest
         return [
             'description' => ['nullable', 'max:191'],
             'user_id' => ['nullable', 'exists:users,id'],
-            'date' => ['nullable', 'date', 'before_or_equal:now' ],
+            'date' => ['nullable', 'date', 'before_or_equal:now'],
             'value' => ['nullable'], //TODO: validate value field
         ];
     }
