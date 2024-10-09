@@ -31,7 +31,7 @@ class ExpenseController extends Controller
     {
         $expense = Expense::create($request->validated());
 
-        auth()->user()->notify(
+        $expense->user->notify(
             new ExpenseCreated($expense)
         );
 
