@@ -23,7 +23,6 @@ class Expense extends Model
         'user',
     ];
 
-
     protected $casts = [
         'value' => 'decimal:2',
     ];

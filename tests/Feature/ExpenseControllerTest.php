@@ -223,7 +223,7 @@ class ExpenseControllerTest extends TestCase
         ]);
 
         $url = $this->baseUrl.'/'.$expense->id;
-        
+
         $this->put($url, [
             'value' => 0,
         ])->assertSessionHasErrors(['value']);
