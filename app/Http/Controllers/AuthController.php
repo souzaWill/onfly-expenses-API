@@ -10,9 +10,18 @@ use Illuminate\Support\Facades\Auth;
 class AuthController extends BaseController
 {
     /**
-     * Register api
+     * Registra um novo usuario
      *
-     * @return \Illuminate\Http\Response
+     * @unauthenticated
+     * @response 200
+     * {
+     *       "success": true,
+     *       "data": {
+     *           "token": "1|b4HnecmVF2PdLXO8fFK5ZgkfxmNULocubD6EKoYDdbc0aca3",
+     *           "name": "natus"
+     *       },
+     *       "message": "User registered successfully."
+     *   }
      */
     public function register(Request $request): JsonResponse
     {
@@ -37,7 +46,25 @@ class AuthController extends BaseController
     }
 
     /**
-     * Login api
+     * Login 
+     * 
+     * Permite que um usuário faça login na aplicação.
+     * 
+     * @bodyParam email string required O endereço de e-mail do usuário. Exemplo: user@example.com
+     * @bodyParam password string required A senha do usuário. Exemplo: secret
+     * @response 200 {
+     *    "success": true,
+     *    "data": {
+     *        "token": "1|abc1234567...",
+     *        "name": "John Doe"
+     *    },
+     *    "message": "User login successfully."
+     * }
+     * 
+     * @response 401 {
+     *    "success": false,
+     *    "message": "Unauthorized"
+     * }
      */
     public function login(Request $request): JsonResponse
     {
@@ -61,6 +88,19 @@ class AuthController extends BaseController
 
     }
 
+    /**
+     * Logout do usuário
+     * 
+     * Revoga o token de autenticação atual do usuário, efetuando o logout.
+     * 
+     * 
+     * @authenticated
+     * 
+     * @response 200 {
+     *    "status": "success",
+     *    "message": "User logged out successfully"
+     * }
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
