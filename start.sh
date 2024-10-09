@@ -1,11 +1,16 @@
+#composer install
+docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" \
+    -w /var/www/html \
+    laravelsail/php83-composer:latest \
+    composer install --ignore-platform-reqs
+
 #up containers
 ./vendor/bin/sail up -d 
 
-#composer install
-./vendor/bin/sail composer install
-
 #start database
-./vendor/bin/sail artisan migrate --seed
+./vendor/bin/sail artisan migrate --seed --force
 
 #set env file
 cp .env.example .env
