@@ -15,8 +15,7 @@ class ExpenseController extends Controller
      */
     public function index()
     {
-        $expense = Expense::with('user')
-            ->where('user_id', request()->user()->id)
+        $expense = Expense::accessibleByUser()
             ->get();
 
         return ExpenseResource::collection($expense)
