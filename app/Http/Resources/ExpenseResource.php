@@ -18,6 +18,7 @@ class ExpenseResource extends JsonResource
             'id' => $this->id,
             'description' => $this->description,
             'value' => $this->value,
+            'date' => $this->date,
             'user' => $this->whenLoaded('user'),
         ];
     }

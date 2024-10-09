@@ -24,6 +24,7 @@ class UpdateExpenseRequest extends FormRequest
         return [
             'description' => ['nullable', 'max:191'],
             'user_id' => ['nullable', 'exists:users,id'],
+            'date' => ['nullable', 'date', 'before_or_equal:now' ],
             'value' => ['nullable'], //TODO: validate value field
         ];
     }

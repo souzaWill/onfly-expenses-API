@@ -19,6 +19,7 @@ class ExpenseFactory extends Factory
     {
         return [
             'description' => fake()->word(),
+            'date' => now()->format('Y-m-d'),
             'user_id' => User::factory(),
             'value' => fake()->randomFloat(2, 0, 99999999.99),
         ];
