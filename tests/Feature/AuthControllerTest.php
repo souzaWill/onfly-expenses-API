@@ -78,7 +78,6 @@ class AuthControllerTest extends TestCase
 
     public function test_user_can_successful_logout(): void
     {
-
         $user = User::factory()->create();
         Sanctum::actingAs($user);
 
@@ -87,7 +86,6 @@ class AuthControllerTest extends TestCase
 
     public function test_show_logged_user(): void
     {
-
         $user = User::factory()->create();
         Sanctum::actingAs($user);
 
