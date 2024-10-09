@@ -29,7 +29,11 @@ class AuthController extends BaseController
         $success['token'] = $user->createToken('api')->plainTextToken;
         $success['name'] = $user->name;
 
-        return $this->sendResponse($success, 'User register successfully.', 201);
+        return response()->json([
+            'success' => true,
+            'data' => $success,
+            'message' => 'User registered successfully.',
+        ], 201);
     }
 
     /**
@@ -43,20 +47,27 @@ class AuthController extends BaseController
             $success['token'] = $user->createToken('api')->plainTextToken;
             $success['name'] = $user->name;
 
-            return $this->sendResponse($success, 'User login successfully.');
+            return response()->json([
+                'success' => true,
+                'data' => $success,
+                'message' => 'User login successfully.',
+            ], 200);
         }
 
-        return $this->sendError('Unauthorised.', ['error' => 'Unauthorised'], 401);
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized',
+        ], 401);
+
     }
 
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(
-            [
-                'status' => 'success',
-                'message' => 'User logged out successfully',
-            ]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User logged out successfully',
+        ], 200);
     }
 }
