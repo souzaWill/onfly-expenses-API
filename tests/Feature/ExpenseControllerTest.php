@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Expense;
 use App\Models\User;
+use App\Notifications\ExpenseCreated;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\Fluent\AssertableJson;
 use Tests\TestCase;
 
@@ -49,6 +51,8 @@ class ExpenseControllerTest extends TestCase
 
     public function test_can_create_expense(): void
     {
+        Notification::fake();
+
         $user = $this->login();
 
         $body = [
@@ -67,10 +71,16 @@ class ExpenseControllerTest extends TestCase
             'description' => $body['description'],
             'value' => $body['value'],
         ]);
+
+        Notification::assertSentTo(
+            [$user], ExpenseCreated::class
+        );
     }
 
     public function test_can_create_expense_with_date_in_past(): void
     {
+        Notification::fake();
+
         $user = $this->login();
 
         $body = [
@@ -89,10 +99,16 @@ class ExpenseControllerTest extends TestCase
             'description' => $body['description'],
             'value' => $body['value'],
         ]);
+
+        Notification::assertSentTo(
+            [$user], ExpenseCreated::class
+        );
     }
 
     public function test_cannot_create_expense_with_value_zero(): void
     {
+        Notification::fake();
+
         $user = $this->login();
 
         $body = [
@@ -108,10 +124,16 @@ class ExpenseControllerTest extends TestCase
         $this->assertDatabaseMissing('expenses', [
             'user_id' => $user->id,
         ]);
+
+        Notification::assertNotSentTo(
+            [$user], ExpenseCreated::class
+        );
     }
 
     public function test_cannot_create_expense_with_invalid_inputs(): void
     {
+        Notification::fake();
+
         $user = $this->login();
 
         $body = [
@@ -127,6 +149,10 @@ class ExpenseControllerTest extends TestCase
         $this->assertDatabaseMissing('expenses', [
             'user_id' => $user->id,
         ]);
+
+        Notification::assertNotSentTo(
+            [$user], ExpenseCreated::class
+        );
     }
 
     public function test_can_show_expense(): void

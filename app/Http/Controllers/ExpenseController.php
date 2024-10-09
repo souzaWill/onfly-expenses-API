@@ -6,6 +6,7 @@ use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
+use App\Notifications\ExpenseCreated;
 use Illuminate\Support\Facades\Gate;
 
 class ExpenseController extends Controller
@@ -29,6 +30,10 @@ class ExpenseController extends Controller
     public function store(StoreExpenseRequest $request)
     {
         $expense = Expense::create($request->validated());
+
+        auth()->user()->notify(
+            new ExpenseCreated($expense)
+        );
 
         return (new ExpenseResource($expense))
             ->response()
