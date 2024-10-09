@@ -91,6 +91,25 @@ class ExpenseControllerTest extends TestCase
         ]);
     }
 
+    public function test_cannot_create_expense_with_value_zero(): void
+    {
+        $user = $this->login();
+
+        $body = [
+            'description' => fake()->word(),
+            'date' => now()->format('Y-m-d'),
+            'user_id' => $user->id,
+            'value' => 0,
+        ];
+
+        $this->post($this->baseUrl, $body)
+            ->assertSessionHasErrors(['value']);
+
+        $this->assertDatabaseMissing('expenses', [
+            'user_id' => $user->id,
+        ]);
+    }
+
     public function test_cannot_create_expense_with_invalid_inputs(): void
     {
         $user = $this->login();
@@ -99,11 +118,11 @@ class ExpenseControllerTest extends TestCase
             'description' => str()->random(192),
             'date' => now()->addDay()->format('Y-m-d'),
             'user_id' => User::count() + 2,
-            'value' => fake()->randomFloat(2, 0, 99999999.99),
+            'value' => fake()->randomFloat(2, 0, 99999999.99) * -1,
         ];
 
         $this->post($this->baseUrl, $body)
-            ->assertSessionHasErrors(['user_id', 'description', 'date']);
+            ->assertSessionHasErrors(['user_id', 'description', 'date', 'value']);
 
         $this->assertDatabaseMissing('expenses', [
             'user_id' => $user->id,
@@ -195,6 +214,25 @@ class ExpenseControllerTest extends TestCase
 
     }
 
+    public function test_cannot_update_expense_with_value_zero(): void
+    {
+        $user = $this->login();
+
+        $expense = Expense::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $url = $this->baseUrl.'/'.$expense->id;
+        
+        $this->put($url, [
+            'value' => 0,
+        ])->assertSessionHasErrors(['value']);
+
+        $this->assertDatabaseHas('expenses', [
+            'id' => $expense->id,
+        ]);
+    }
+
     public function test_cannot_update_expense_with_invalid_inputs(): void
     {
         $user = $this->login();
@@ -209,11 +247,11 @@ class ExpenseControllerTest extends TestCase
             'description' => str()->random(192),
             'date' => now()->addDay(),
             'user_id' => $invalidId,
-            'value' => fake()->randomFloat(2, 0, 99999999.99),
+            'value' => fake()->randomFloat(2, 0, 99999999.99) * -1,
         ];
 
         $this->put($url, $body)
-            ->assertSessionHasErrors(['user_id', 'description', 'date']);
+            ->assertSessionHasErrors(['user_id', 'description', 'date', 'value']);
 
         $this->assertDatabaseHas('expenses', [
             'id' => $expense->id,

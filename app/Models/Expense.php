@@ -23,6 +23,11 @@ class Expense extends Model
         'user',
     ];
 
+
+    protected $casts = [
+        'value' => 'decimal:2',
+    ];
+
     /**
      * Get the user that owns the expense.
      */

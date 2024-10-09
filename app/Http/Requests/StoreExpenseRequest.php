@@ -26,7 +26,7 @@ class StoreExpenseRequest extends FormRequest
             'description' => ['required', 'max:191'],
             'user_id' => ['required', 'exists:users,id'],
             'date' => ['required', 'date', 'before_or_equal:now'],
-            'value' => ['required'], //TODO: validate value field
+            'value' => ['required', 'numeric', 'gt:0'],
         ];
     }
 }

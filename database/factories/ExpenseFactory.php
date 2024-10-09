@@ -21,7 +21,7 @@ class ExpenseFactory extends Factory
             'description' => fake()->word(),
             'date' => now()->format('Y-m-d'),
             'user_id' => User::factory(),
-            'value' => fake()->randomFloat(2, 0, 99999999.99),
+            'value' => fake()->randomFloat(2, 0.01, 99999999.99), // Gera valores de 0.01 a 99,999,999.99
         ];
     }
 }
