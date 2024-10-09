@@ -7,7 +7,7 @@ docker run --rm \
     composer install --ignore-platform-reqs
 
 #up containers
-./vendor/bin/sail up -d 
+./vendor/bin/sail up -d --build
 
 #start database
 ./vendor/bin/sail artisan migrate --seed --force
