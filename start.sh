@@ -5,7 +5,7 @@
 ./vendor/bin/sail composer install
 
 #start database
-./vendor/bin/sail artisan migrate:fresh --seed
+./vendor/bin/sail artisan migrate --seed
 
 #set env file
 cp .env.example .env
