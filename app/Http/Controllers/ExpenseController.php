@@ -7,15 +7,53 @@ use App\Http\Requests\UpdateExpenseRequest;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use App\Notifications\ExpenseCreated;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Endpoints
+ *
+ * @subgroup Expenses
+ */
 class ExpenseController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Listar Despesas
+     *
+     * Retorna a listagem de todas as despesas acessíveis pelo usuário autenticado.
+     *
+     * @response 200 {
+     *    "data": [
+     *        {
+     *            "id": 1,
+     *            "description": "Aluguel",
+     *            "value": "1.500,00",
+     *            "date": "2024-10-09",
+     *            "user": {
+     *                "id": 1,
+     *                "name": "John Doe",
+     *                "email": "johndoe@example.com"
+     *            }
+     *        },
+     *        {
+     *            "id": 2,
+     *            "description": "Conta de luz",
+     *            "value": "120,50",
+     *            "date": "2024-10-08",
+     *            "user": {
+     *                "id": 2,
+     *                "name": "Jane Doe",
+     *                "email": "janedoe@example.com"
+     *            }
+     *        }
+     *    ]
+     * }
      */
-    public function index()
+    public function index(): JsonResponse
     {
+        Gate::authorize('viewAny', Expense::class);
+
         $expense = Expense::accessibleByUser()
             ->get();
 
@@ -25,9 +63,30 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Cadastrar Despesa
+     *
+     * Cria uma nova despesa para o usuário autenticado e envia uma notificação de email ao usuário.
+     *
+     *
+     * @bodyParam description string required Descrição da despesa. Exemplo: Aluguel
+     * @bodyParam value float required Valor da despesa. Exemplo: 1500.00
+     * @bodyParam date date required Data da despesa. Exemplo: 2024-10-09
+     *
+     * @response 201 {
+     *    "data": {
+     *        "id": 1,
+     *        "description": "Aluguel",
+     *        "value": "1.500,00",
+     *        "date": "2024-10-09",
+     *        "user": {
+     *            "id": 1,
+     *            "name": "John Doe",
+     *            "email": "johndoe@example.com"
+     *        }
+     *    }
+     * }
      */
-    public function store(StoreExpenseRequest $request)
+    public function store(StoreExpenseRequest $request): JsonResponse
     {
         $expense = Expense::create($request->validated());
 
@@ -42,9 +101,34 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Exibir Detalhes da Despesa
+     *
+     * Retorna os detalhes de uma despesa específica se o usuário tiver permissão para visualizá-la.
+     *
+     *
+     * @urlParam expense int required O ID da despesa. Exemplo: 1
+     *
+     * @response 200 {
+     *    "data": {
+     *        "id": 1,
+     *        "description": "Aluguel",
+     *        "value": "1.500,00",
+     *        "date": "2024-10-09",
+     *        "user": {
+     *            "id": 1,
+     *            "name": "John Doe",
+     *            "email": "johndoe@example.com"
+     *        }
+     *    }
+     * }
+     * @response 403 {
+     *    "message": "This action is unauthorized."
+     * }
+     * @response 404 {
+     *    "message": "No query results for model [Expense] 1"
+     * }
      */
-    public function show(Expense $expense)
+    public function show(Expense $expense): JsonResponse
     {
         Gate::authorize('view', $expense);
 
@@ -54,9 +138,42 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Atualizar Despesa
+     *
+     * Atualiza os dados de uma despesa específica.
+     *
+     * @urlParam expense int required O ID da despesa que será atualizada. Exemplo: 1
+     *
+     * @bodyParam description string required A nova descrição da despesa. Exemplo: Aluguel Atualizado
+     * @bodyParam value float required O novo valor da despesa. Exemplo: 1600.00
+     * @bodyParam date date required A nova data da despesa. Exemplo: 2024-10-09
+     *
+     * @response 200 {
+     *    "data": {
+     *        "id": 1,
+     *        "description": "Aluguel Atualizado",
+     *        "value": "1.600,00",
+     *        "date": "2024-10-09",
+     *        "user": {
+     *            "id": 1,
+     *            "name": "John Doe",
+     *            "email": "johndoe@example.com"
+     *        }
+     *    }
+     * }
+     * @response 403 {
+     *    "message": "This action is unauthorized."
+     * }
+     * @response 422 {
+     *    "message": "The given data was invalid.",
+     *    "errors": {
+     *        "description": [
+     *            "The description field is required."
+     *        ]
+     *    }
+     * }
      */
-    public function update(UpdateExpenseRequest $request, Expense $expense)
+    public function update(UpdateExpenseRequest $request, Expense $expense): JsonResponse
     {
         $expense->fill($request->validated());
         $expense->save();
@@ -67,9 +184,21 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Deletar Despesa
+     *
+     * Exclui uma despesa específica.
+     *
+     * @urlParam expense int required O ID da despesa que será deletada. Exemplo: 1
+     *
+     * @response 204 {}
+     * @response 403 {
+     *    "message": "This action is unauthorized."
+     * }
+     * @response 404 {
+     *    "message": "No query results for model [Expense] 1"
+     * }
      */
-    public function destroy(Expense $expense)
+    public function destroy(Expense $expense): Response
     {
         Gate::authorize('delete', $expense);
 

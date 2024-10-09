@@ -1,0 +1,591 @@
+openapi: 3.0.3
+info:
+  title: 'Expenses api'
+  description: ''
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost'
+paths:
+  /api/register:
+    post:
+      summary: 'Registra um novo usuario'
+      operationId: registraUmNovoUsuario
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: true
+                  data:
+                    token: 1|b4HnecmVF2PdLXO8fFK5ZgkfxmNULocubD6EKoYDdbc0aca3
+                    name: natus
+                  message: 'User registered successfully.'
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: 1|b4HnecmVF2PdLXO8fFK5ZgkfxmNULocubD6EKoYDdbc0aca3
+                      name:
+                        type: string
+                        example: natus
+                  message:
+                    type: string
+                    example: 'User registered successfully.'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: ''
+                  example: praesentium
+                email:
+                  type: string
+                  description: validation.email.
+                  example: winnifred.ernser@example.net
+                password:
+                  type: string
+                  description: ''
+                  example: impedit
+                c_password:
+                  type: string
+                  description: 'The value and <code>password</code> must match.'
+                  example: sunt
+              required:
+                - name
+                - email
+                - password
+                - c_password
+      security: []
+  /api/login:
+    post:
+      summary: Login
+      operationId: login
+      description: 'Permite que um usuário faça login na aplicação.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: true
+                  data:
+                    token: 1|abc1234567...
+                    name: 'John Doe'
+                  message: 'User login successfully.'
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: 1|abc1234567...
+                      name:
+                        type: string
+                        example: 'John Doe'
+                  message:
+                    type: string
+                    example: 'User login successfully.'
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: Unauthorized
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Unauthorized
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'O endereço de e-mail do usuário. Exemplo: user@example.com'
+                  example: stroman.meggie@example.org
+                password:
+                  type: string
+                  description: 'A senha do usuário. Exemplo: secret'
+                  example: '*gC,]*vRLXR7N6c_'
+              required:
+                - email
+                - password
+  /api/logout:
+    post:
+      summary: 'Logout do usuário'
+      operationId: logoutDoUsurio
+      description: 'Revoga o token de autenticação atual do usuário, efetuando o logout.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: success
+                  message: 'User logged out successfully'
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 'User logged out successfully'
+      tags:
+        - Endpoints
+  /api/expenses:
+    get:
+      summary: 'Listar Despesas'
+      operationId: listarDespesas
+      description: 'Retorna a listagem de todas as despesas acessíveis pelo usuário autenticado.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      description: Aluguel
+                      value: '1.500,00'
+                      date: '2024-10-09'
+                      user:
+                        id: 1
+                        name: 'John Doe'
+                        email: johndoe@example.com
+                    -
+                      id: 2
+                      description: 'Conta de luz'
+                      value: '120,50'
+                      date: '2024-10-08'
+                      user:
+                        id: 2
+                        name: 'Jane Doe'
+                        email: janedoe@example.com
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        description: Aluguel
+                        value: '1.500,00'
+                        date: '2024-10-09'
+                        user:
+                          id: 1
+                          name: 'John Doe'
+                          email: johndoe@example.com
+                      -
+                        id: 2
+                        description: 'Conta de luz'
+                        value: '120,50'
+                        date: '2024-10-08'
+                        user:
+                          id: 2
+                          name: 'Jane Doe'
+                          email: janedoe@example.com
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        description:
+                          type: string
+                          example: Aluguel
+                        value:
+                          type: string
+                          example: '1.500,00'
+                        date:
+                          type: string
+                          example: '2024-10-09'
+                        user:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 'John Doe'
+                            email:
+                              type: string
+                              example: johndoe@example.com
+      tags:
+        - Endpoints
+    post:
+      summary: 'Cadastrar Despesa'
+      operationId: cadastrarDespesa
+      description: 'Cria uma nova despesa para o usuário autenticado e envia uma notificação de email ao usuário.'
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    description: Aluguel
+                    value: '1.500,00'
+                    date: '2024-10-09'
+                    user:
+                      id: 1
+                      name: 'John Doe'
+                      email: johndoe@example.com
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      description:
+                        type: string
+                        example: Aluguel
+                      value:
+                        type: string
+                        example: '1.500,00'
+                      date:
+                        type: string
+                        example: '2024-10-09'
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'John Doe'
+                          email:
+                            type: string
+                            example: johndoe@example.com
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: 'Descrição da despesa. Exemplo: Aluguel'
+                  example: 'Iste qui et mollitia et minus doloremque fugit.'
+                user_id:
+                  type: string
+                  description: ''
+                  example: illo
+                date:
+                  type: date
+                  description: 'Data da despesa. Exemplo: 2024-10-09'
+                  example: enim
+                value:
+                  type: number
+                  description: 'Valor da despesa. Exemplo: 1500.00'
+                  example: 4.6338
+              required:
+                - description
+                - user_id
+                - date
+                - value
+  '/api/expenses/{id}':
+    get:
+      summary: 'Exibir Detalhes da Despesa'
+      operationId: exibirDetalhesDaDespesa
+      description: 'Retorna os detalhes de uma despesa específica se o usuário tiver permissão para visualizá-la.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    description: Aluguel
+                    value: '1.500,00'
+                    date: '2024-10-09'
+                    user:
+                      id: 1
+                      name: 'John Doe'
+                      email: johndoe@example.com
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      description:
+                        type: string
+                        example: Aluguel
+                      value:
+                        type: string
+                        example: '1.500,00'
+                      date:
+                        type: string
+                        example: '2024-10-09'
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'John Doe'
+                          email:
+                            type: string
+                            example: johndoe@example.com
+        403:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'This action is unauthorized.'
+                properties:
+                  message:
+                    type: string
+                    example: 'This action is unauthorized.'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'No query results for model [Expense] 1'
+                properties:
+                  message:
+                    type: string
+                    example: 'No query results for model [Expense] 1'
+      tags:
+        - Endpoints
+    put:
+      summary: 'Atualizar Despesa'
+      operationId: atualizarDespesa
+      description: 'Atualiza os dados de uma despesa específica.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    description: 'Aluguel Atualizado'
+                    value: '1.600,00'
+                    date: '2024-10-09'
+                    user:
+                      id: 1
+                      name: 'John Doe'
+                      email: johndoe@example.com
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      description:
+                        type: string
+                        example: 'Aluguel Atualizado'
+                      value:
+                        type: string
+                        example: '1.600,00'
+                      date:
+                        type: string
+                        example: '2024-10-09'
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'John Doe'
+                          email:
+                            type: string
+                            example: johndoe@example.com
+        403:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'This action is unauthorized.'
+                properties:
+                  message:
+                    type: string
+                    example: 'This action is unauthorized.'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The given data was invalid.'
+                  errors:
+                    description:
+                      - 'The description field is required.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The given data was invalid.'
+                  errors:
+                    type: object
+                    properties:
+                      description:
+                        type: array
+                        example:
+                          - 'The description field is required.'
+                        items:
+                          type: string
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: 'A nova descrição da despesa. Exemplo: Aluguel Atualizado'
+                  example: 'Debitis quo itaque quos.'
+                user_id:
+                  type: string
+                  description: ''
+                  example: null
+                date:
+                  type: date
+                  description: 'A nova data da despesa. Exemplo: 2024-10-09'
+                  example: omnis
+                value:
+                  type: number
+                  description: 'O novo valor da despesa. Exemplo: 1600.00'
+                  example: 0.80983867
+              required:
+                - description
+                - date
+                - value
+    delete:
+      summary: 'Deletar Despesa'
+      operationId: deletarDespesa
+      description: 'Exclui uma despesa específica.'
+      parameters: []
+      responses:
+        204:
+          description: ''
+        403:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'This action is unauthorized.'
+                properties:
+                  message:
+                    type: string
+                    example: 'This action is unauthorized.'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'No query results for model [Expense] 1'
+                properties:
+                  message:
+                    type: string
+                    example: 'No query results for model [Expense] 1'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the expense.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: expense
+        description: 'O ID da despesa. Exemplo: 1'
+        example: 12
+        required: true
+        schema:
+          type: integer
+tags:
+  -
+    name: Endpoints
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'You can retrieve your token by visiting your dashboard and clicking <b>Generate API token</b>.'
+security:
+  -
+    default: []

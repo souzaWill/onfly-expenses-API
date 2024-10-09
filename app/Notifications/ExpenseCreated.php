@@ -11,7 +11,7 @@ class ExpenseCreated extends Notification
 {
     use Queueable;
 
-    private Expense $expense;
+    protected Expense $expense;
 
     /**
      * Create a new notification instance.
